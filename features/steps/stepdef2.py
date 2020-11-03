@@ -1,5 +1,4 @@
-import random
-import requests
+
 from behave import *
 from part2.getArticlePayload import *
 from part2.getImagePayload import *
@@ -21,15 +20,15 @@ def step_impl(context, post_type):
         context.body_values = getArticleSharePayload()
     elif context.post_type == 3:
         context.body_values = getImageSharePayload()
-        context.uploadURL = context.body_values['uploadURL']
-        context.asset = context.body_values['asset']
+        context.uploadURL = str(context.body_values['uploadURL'])
+        context.asset = str(context.body_values['asset'])
 
 
 
 @when('we construct and send the post request')
 def step_impl(context):
     context.body = context.body_values['json']
-    context.share_id = context.body_values['shareID']
+    context.share_id = str(context.body_values['shareID'])
     context.postID = requests.post(url=context.url, json=context.body, headers=context.headers)
 
 
@@ -37,12 +36,12 @@ def step_impl(context):
 def step_impl(context):
     id = context.postID.json()['id']
     print(str(context.share_id) + '  ---------->  ' + id)
-    if context.post_type == 1 or 2:
+    if context.post_type == 1 or context.post_type == 2:
         query = 'INSERT INTO payloads.postinfo (shareID, postID, uploadURL, asset) VALUES' \
-                ' ("' + str(context.share_id) + '", "' + id + '", "", "");'
+                ' ("' +context.share_id+ '", "' +id+ '", "", "");'
     elif context.post_type == 3:
         query = 'INSERT INTO payloads.postinfo (shareID, postID, uploadURL, asset) VALUES' \
-                ' ("' + str(context.share_id) + '", "' + id + '", "' + str(context.uploadURL) + '", "' + str(context.asset) + '");'
+                ' ("' +context.share_id+ '", "' +id+ '", "' +context.uploadURL+ '", "' +context.asset+ '");'
 
     cursor.execute(query)
     conn.commit()
@@ -52,7 +51,7 @@ def step_impl(context):
 def step_impl(context):
     context.auth_header = getConfig()['API']['auth_header']
     context.query = 'SELECT postID FROM payloads.postinfo;'
-    context.cursor.execute(context.query)
+    cursor.execute(context.query)
     context.postIDs = cursor.fetchall()
 
 
